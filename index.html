@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golf Scheduler</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #1D9E75;
+    --green-dark: #0F6E56;
+    --green-deep: #085041;
+    --green-light: #E1F5EE;
+    --green-mid: #9FE1CB;
+    --amber: #FAC775;
+    --amber-dark: #633806;
+    --red-light: #FCEBEB;
+    --red: #A32D2D;
+    --gray-50: #F8F7F4;
+    --gray-100: #EEEDE8;
+    --gray-200: #D3D1C7;
+    --gray-400: #888780;
+    --gray-600: #5F5E5A;
+    --gray-900: #1C1C1A;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-pill: 999px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-900);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-header {
+    background: var(--green-deep);
+    color: white;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .page-header .logo { font-size: 24px; }
+  .page-header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  .page-header p { font-size: 13px; opacity: 0.7; margin-top: 1px; }
+
+  .container { max-width: 680px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  .card {
+    background: white;
+    border: 1px solid var(--gray-100);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+
+  .section-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 10px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    background: white;
+    color: var(--gray-900);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input[type="text"]:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(29,158,117,0.12); }
+  input[type="text"]::placeholder { color: var(--gray-400); }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--green); color: white; width: 100%; margin-top: 10px; }
+  .btn-primary:hover { background: var(--green-dark); }
+  .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-outline { background: transparent; color: var(--gray-900); border: 1px solid var(--gray-200); padding: 8px 16px; font-size: 13px; }
+  .btn-outline:hover { background: var(--gray-50); border-color: var(--gray-400); }
+
+  .tabs {
+    display: flex;
+    background: var(--gray-100);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    gap: 2px;
+    margin-bottom: 1.25rem;
+  }
+  .tab {
+    flex: 1;
+    padding: 8px 6px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--gray-600);
+    transition: all 0.15s;
+  }
+  .tab.active {
+    background: white;
+    color: var(--gray-900);
+    font-weight: 600;
+    box-shadow: var(--shadow);
+  }
+
+  .setup-tabs {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .setup-tab {
+    flex: 1;
+    padding: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    border: none;
+    background: white;
+    cursor: pointer;
+    color: var(--gray-600);
+    transition: all 0.15s;
+    border-right: 1px solid var(--gray-200);
+  }
+  .setup-tab:last-child { border-right: none; }
+  .setup-tab.active { background: var(--green); color: white; font-weight: 600; }
+
+  .cal-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .day-toggles {
+    display: flex;
+    gap: 6px;
+  }
+  .btn-day-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 13px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--gray-200);
+    background: white;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-600);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-day-toggle:hover { border-color: var(--green); color: var(--green-dark); }
+  .btn-day-toggle.active { background: var(--green); border-color: var(--green); color: white; }
+
+  .month-section { margin-bottom: 1.5rem; }
+  .month-title { font-size: 14px; font-weight: 600; color: var(--gray-900); margin-bottom: 10px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-header { font-size: 11px; font-weight: 600; color: var(--gray-400); text-align: center; padding: 3px 0; }
+  .cal-day {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    border: 1px solid var(--gray-100);
+    background: var(--gray-50);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--gray-600);
+    transition: all 0.1s;
+    font-weight: 500;
+    position: relative;
+  }
+  .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
+  .cal-day.past { opacity: 0.25; cursor: not-allowed; pointer-events: none; }
+  .cal-day.weekend { color: var(--gray-900); }
+  .cal-day:not(.empty):not(.past):hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+  .cal-day.selected { background: var(--green); border-color: var(--green); color: white; font-weight: 600; }
+  .cal-day.selected:hover { background: var(--green-dark); }
+
+  .slot-day { margin-bottom: 12px; }
+  .slot-day-label { font-size: 13px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
+  .time-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--gray-200);
+    background: white;
+    color: var(--gray-600);
+    transition: all 0.1s;
+    user-select: none;
+  }
+  .pill:hover { border-color: var(--green); color: var(--green); }
+  .pill.active { background: var(--green); border-color: var(--green); color: white; }
+
+  .group-banner {
+    background: var(--green-deep);
+    color: white;
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .group-banner .info { flex: 1; min-width: 0; }
+  .group-banner .name { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .group-banner .code {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    opacity: 0.7;
+    background: rgba(255,255,255,0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    word-break: break-all;
+  }
+
+  .match-card {
+    background: white;
+    border: 1px solid var(--gray-100);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+  }
+  .match-card.top { border-left: 3px solid var(--green); }
+  .match-date { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--gray-900); }
+  .score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .score-bar-bg { flex: 1; height: 5px; border-radius: 3px; background: var(--gray-100); }
+  .score-bar { height: 5px; border-radius: 3px; background: var(--green); transition: width 0.4s; }
+  .score-label { font-size: 12px; color: var(--gray-400); font-weight: 500; min-width: 36px; text-align: right; }
+  .avatars { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+  .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--green-light);
+    color: var(--green-deep);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .slot-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+  .slot-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--green-light);
+    color: var(--green-deep);
+    font-weight: 500;
+  }
+
+  .member-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    border: 1px solid var(--gray-100);
+  }
+  .member-chip .mname { flex: 1; font-size: 14px; font-weight: 500; }
+  .member-chip .mdays { font-size: 12px; color: var(--gray-400); }
+
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--gray-900);
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+    z-index: 9999;
+    white-space: nowrap;
+    max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--green-deep); }
+  .toast.error { background: var(--red); }
+
+  .spinner {
+    display: inline-block;
+    width: 15px; height: 15px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .no-results { text-align: center; padding: 2.5rem 1rem; color: var(--gray-400); font-size: 14px; line-height: 1.6; }
+  .no-results strong { color: var(--gray-600); display: block; margin-bottom: 4px; font-size: 15px; }
+
+  .min-people-row { display: flex; align-items: center; gap: 14px; }
+  input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--gray-200);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--green);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  input[type="range"]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; }
+
+  .storage-note {
+    font-size: 12px;
+    color: var(--gray-400);
+    text-align: center;
+    padding: 6px 0;
+    font-style: italic;
+  }
+
+  .person-switcher {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .person-switcher-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+  }
+  .person-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .person-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px 5px 8px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--gray-200);
+    background: white;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .person-chip:hover { border-color: var(--green); color: var(--green-dark); }
+  .person-chip.active { background: var(--green); border-color: var(--green); color: white; }
+  .person-chip .chip-avatar {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    font-size: 9px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .person-chip:not(.active) .chip-avatar {
+    background: var(--green-light);
+    color: var(--green-deep);
+  }
+  .add-person-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
+    border: 1px dashed var(--gray-200);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-400);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.12s;
+  }
+  .add-person-btn:hover { border-color: var(--green); color: var(--green); }
+  .new-person-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 10px 12px;
+    background: var(--green-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--green-mid);
+  }
+  .new-person-row input { margin: 0; flex: 1; }
+  .new-person-row .btn-sm {
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+  }
+  .btn-confirm { background: var(--green); color: white; }
+  .btn-confirm:hover { background: var(--green-dark); }
+  .btn-cancel-sm { background: transparent; color: var(--gray-600); border: 1px solid var(--gray-200) !important; }
+  .current-person-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--green-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--green-mid);
+    margin-bottom: 1.25rem;
+  }
+  .current-person-banner .cp-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--green);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .current-person-banner .cp-name { font-size: 14px; font-weight: 600; color: var(--green-deep); flex: 1; }
+  .current-person-banner .cp-days { font-size: 12px; color: var(--green-dark); }
+
+  .btn-birdiewatch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 7px 14px;
+    background: var(--green);
+    color: white;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-birdiewatch:hover { background: var(--green-dark); }
+
+  .how-it-works {
+    background: var(--green-light);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--green-mid);
+  }
+  .how-it-works h3 { font-size: 13px; font-weight: 700; color: var(--green-deep); margin-bottom: 8px; }
+  .how-it-works ol { padding-left: 1.25rem; }
+  .how-it-works li { font-size: 13px; color: var(--green-dark); margin-bottom: 4px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="logo">⛳</div>
+  <div>
+    <h1>Golf Scheduler</h1>
+    <p>Find dates your whole group can tee off</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SETUP VIEW -->
+  <div id="setup-view">
+    <div class="how-it-works">
+      <h3>How it works</h3>
+      <ol>
+        <li>One person creates a group and shares the invite code</li>
+        <li>Each friend joins and marks their available days &amp; times</li>
+        <li>Check "Best dates" to see when everyone overlaps</li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="setup-tabs">
+        <button class="setup-tab active" id="stab-create" onclick="switchSetupTab('create')">Create a group</button>
+        <button class="setup-tab" id="stab-join" onclick="switchSetupTab('join')">Join a group</button>
+      </div>
+      <div id="create-panel">
+        <div class="section-label">Group name</div>
+        <input type="text" id="group-name-input" placeholder="e.g. Weekend Warriors" maxlength="40">
+        <button class="btn btn-primary" id="create-btn" onclick="createGroup()">Create group</button>
+      </div>
+      <div id="join-panel" style="display:none;">
+        <div class="section-label">Invite code</div>
+        <input type="text" id="group-id-input" placeholder="Paste the invite code here" autocapitalize="characters">
+        <button class="btn btn-primary" id="join-btn" onclick="joinGroup()">Join group</button>
+      </div>
+    </div>
+    <div class="storage-note" id="storage-note"></div>
+  </div>
+
+  <!-- MAIN VIEW -->
+  <div id="main-view" style="display:none;">
+    <div class="group-banner">
+      <div class="info">
+        <div class="name" id="group-display-name"></div>
+        <div class="code" id="group-code-display"></div>
+      </div>
+      <button class="btn btn-outline" style="background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.3);color:white;flex-shrink:0;" onclick="copyCode()">Copy code</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" id="mtab-avail" onclick="switchMainTab('avail')">My availability</button>
+      <button class="tab" id="mtab-members" onclick="switchMainTab('members')">Members</button>
+      <button class="tab" id="mtab-results" onclick="switchMainTab('results')">Best dates</button>
+    </div>
+
+    <!-- AVAILABILITY TAB -->
+    <div id="tab-avail">
+      <!-- Person switcher -->
+      <div class="card" style="padding:1rem 1.25rem;">
+        <div class="person-switcher">
+          <span class="person-switcher-label">Golfer</span>
+          <div class="person-chips" id="person-chips"></div>
+          <button class="add-person-btn" id="add-person-btn" onclick="showAddPerson()">+ Add golfer</button>
+        </div>
+        <div id="new-person-row" style="display:none;">
+          <div class="new-person-row">
+            <input type="text" id="new-person-input" placeholder="Enter name" style="margin:0;">
+            <button class="btn-sm btn-confirm" onclick="confirmAddPerson()">Add</button>
+            <button class="btn-sm btn-cancel-sm btn" onclick="hideAddPerson()" style="width:auto;margin:0;">Cancel</button>
+          </div>
+        </div>
+        <div id="current-person-banner" style="display:none;"></div>
+      </div>
+
+      <div id="avail-form" style="display:none;">
+        <div class="card">
+          <div class="cal-toolbar">
+            <div class="section-label" style="margin:0;">Tap days you are free</div>
+            <div class="day-toggles">
+              <button class="btn-day-toggle" id="toggle-fri" onclick="toggleDay5(5)">Fri</button>
+              <button class="btn-day-toggle" id="toggle-sat" onclick="toggleDay5(6)">Sat</button>
+              <button class="btn-day-toggle" id="toggle-sun" onclick="toggleDay5(0)">Sun</button>
+            </div>
+          </div>
+          <div id="calendar-container"></div>
+          <div id="slot-section" style="display:none;">
+            <div class="divider"></div>
+            <div class="section-label">Available times on selected days</div>
+            <div id="slot-details"></div>
+          </div>
+          <button class="btn btn-primary" id="save-btn" onclick="saveAvailability()">Save availability</button>
+        </div>
+      </div>
+
+      <div id="no-person-prompt" style="display:none;">
+        <div class="no-results" style="padding:2rem 1rem;">
+          <strong>No golfer selected</strong>Add a golfer above to start entering availability.
+        </div>
+      </div>
+    </div>
+
+    <!-- MEMBERS TAB -->
+    <div id="tab-members" style="display:none;">
+      <div class="card">
+        <div class="section-label">Members who have responded</div>
+        <div id="members-list"><div class="no-results"><strong>No members yet</strong>Share the invite code to get started!</div></div>
+      </div>
+    </div>
+
+    <!-- RESULTS TAB -->
+    <div id="tab-results" style="display:none;">
+      <div class="card" style="margin-bottom:1rem;">
+        <div class="section-label">Your location</div>
+        <input type="text" id="location-input" placeholder="e.g. Denver, CO" style="margin-bottom:1rem;" oninput="renderResults()">
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;">
+            <div class="section-label">Holes</div>
+            <select id="holes-input" onchange="renderResults()" style="width:100%;padding:10px 14px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-size:15px;font-family:'DM Sans',sans-serif;background:white;color:var(--gray-900);outline:none;">
+              <option value="18">18 holes</option>
+              <option value="9">9 holes</option>
+            </select>
+          </div>
+          <div style="flex:1;">
+            <div class="section-label">Distance (miles)</div>
+            <select id="distance-input" onchange="renderResults()" style="width:100%;padding:10px 14px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-size:15px;font-family:'DM Sans',sans-serif;background:white;color:var(--gray-900);outline:none;">
+              <option value="10">10 miles</option>
+              <option value="25">25 miles</option>
+              <option value="50" selected>50 miles</option>
+              <option value="100">100 miles</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:1rem;">
+        <div class="section-label">Minimum golfers needed</div>
+        <div class="min-people-row">
+          <input type="range" min="2" max="8" value="2" step="1" id="min-slider" oninput="document.getElementById('min-val').textContent=this.value;renderResults();">
+          <span id="min-val" style="font-size:15px;font-weight:700;min-width:20px;color:var(--green-dark);">2</span>
+        </div>
+      </div>
+      <div id="results-container"><div class="no-results"><strong>Loading best dates...</strong></div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ── Firebase config ───────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyC2YF5d9r9-b0Uq6gBPlmE0pxn6n4bTw8s",
+  authDomain: "golf-scheduler-aa012.firebaseapp.com",
+  projectId: "golf-scheduler-aa012",
+  storageBucket: "golf-scheduler-aa012.firebasestorage.app",
+  messagingSenderId: "318863721251",
+  appId: "1:318863721251:web:b5b7cfc00c1dfdfe004296"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ── App state ─────────────────────────────────────────────────────────────
+const TIME_SLOTS = ['Early morning (6–9am)', 'Morning (9am–noon)', 'Afternoon (noon–4pm)'];
+let currentGroupId = null;
+let groupData = {};
+let selectedDays = {};
+let currentPerson = null;
+let unsubscribe = null;
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ── Setup tabs ────────────────────────────────────────────────────────────
+function switchSetupTab(tab) {
+  document.getElementById('create-panel').style.display = tab === 'create' ? '' : 'none';
+  document.getElementById('join-panel').style.display = tab === 'join' ? '' : 'none';
+  document.getElementById('stab-create').className = 'setup-tab' + (tab === 'create' ? ' active' : '');
+  document.getElementById('stab-join').className = 'setup-tab' + (tab === 'join' ? ' active' : '');
+}
+window.switchSetupTab = switchSetupTab;
+
+function switchMainTab(tab) {
+  ['avail','members','results'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none';
+    document.getElementById('mtab-' + t).className = 'tab' + (t === tab ? ' active' : '');
+  });
+  if (tab === 'members') renderMembers();
+  if (tab === 'results') renderResults();
+}
+window.switchMainTab = switchMainTab;
+
+// ── ID generation ─────────────────────────────────────────────────────────
+function genId() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let id = '';
+  for (let i = 0; i < 7; i++) id += chars[Math.floor(Math.random() * chars.length)];
+  return id;
+}
+
+// ── Firestore helpers ─────────────────────────────────────────────────────
+function groupRef(id) {
+  return doc(db, 'groups', id);
+}
+
+async function saveGroupToFirestore() {
+  if (!currentGroupId) return false;
+  try {
+    await setDoc(groupRef(currentGroupId), groupData);
+    return true;
+  } catch(e) {
+    console.error('Firestore save error:', e);
+    return false;
+  }
+}
+
+function subscribeToGroup(id) {
+  if (unsubscribe) unsubscribe();
+  unsubscribe = onSnapshot(groupRef(id), snap => {
+    if (!snap.exists()) return;
+    const incoming = snap.data();
+    // Merge remote data — preserve local selected days for current person in memory
+    groupData = incoming;
+    // Re-render live views
+    renderPersonChips();
+    renderMembers();
+    renderResults();
+    // Update banner day count in case remote save reflects latest
+    updateCurrentPersonBanner();
+  });
+}
+
+// ── Create group ──────────────────────────────────────────────────────────
+async function createGroup() {
+  const name = document.getElementById('group-name-input').value.trim();
+  if (!name) { showToast('Please enter a group name', 'error'); return; }
+  const btn = document.getElementById('create-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Creating...';
+  const id = genId();
+  const data = { name, members: {}, created: Date.now() };
+  try {
+    await setDoc(groupRef(id), data);
+    currentGroupId = id;
+    groupData = data;
+    subscribeToGroup(id);
+    enterGroup(id, name);
+  } catch(e) {
+    showToast('Could not create group — check your connection', 'error');
+  }
+  btn.textContent = 'Create group'; btn.disabled = false;
+}
+window.createGroup = createGroup;
+
+// ── Join group ────────────────────────────────────────────────────────────
+async function joinGroup() {
+  let raw = document.getElementById('group-id-input').value.trim().toUpperCase();
+  if (!raw) { showToast('Please enter an invite code', 'error'); return; }
+  const btn = document.getElementById('join-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Joining...';
+  try {
+    const snap = await getDoc(groupRef(raw));
+    if (!snap.exists()) throw new Error('not found');
+    currentGroupId = raw;
+    groupData = snap.data();
+    subscribeToGroup(raw);
+    enterGroup(raw, groupData.name);
+  } catch(e) {
+    showToast('Group not found — check the code', 'error');
+  }
+  btn.textContent = 'Join group'; btn.disabled = false;
+}
+window.joinGroup = joinGroup;
+
+// ── Enter group ───────────────────────────────────────────────────────────
+function enterGroup(id, name) {
+  document.getElementById('setup-view').style.display = 'none';
+  document.getElementById('main-view').style.display = '';
+  document.getElementById('group-display-name').textContent = name;
+  document.getElementById('group-code-display').textContent = 'Invite code: ' + id;
+  renderPersonChips();
+  showNoPersonPrompt();
+  showToast('Welcome to ' + name + '!', 'success');
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(currentGroupId)
+    .then(() => showToast('Invite code copied!', 'success'))
+    .catch(() => showToast('Code: ' + currentGroupId));
+}
+window.copyCode = copyCode;
+
+// ── Person switcher ───────────────────────────────────────────────────────
+function renderPersonChips() {
+  const container = document.getElementById('person-chips');
+  if (!container) return;
+  container.innerHTML = '';
+  const members = groupData.members || {};
+  Object.keys(members).forEach(name => {
+    const chip = document.createElement('button');
+    chip.className = 'person-chip' + (name === currentPerson ? ' active' : '');
+    const ini = name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    chip.innerHTML = '<div class="chip-avatar">' + ini + '</div>' + name;
+    chip.onclick = () => switchPerson(name);
+    container.appendChild(chip);
+  });
+}
+
+function showAddPerson() {
+  document.getElementById('new-person-row').style.display = '';
+  document.getElementById('add-person-btn').style.display = 'none';
+  setTimeout(() => document.getElementById('new-person-input').focus(), 50);
+}
+window.showAddPerson = showAddPerson;
+
+function hideAddPerson() {
+  document.getElementById('new-person-row').style.display = 'none';
+  document.getElementById('add-person-btn').style.display = '';
+  document.getElementById('new-person-input').value = '';
+}
+window.hideAddPerson = hideAddPerson;
+
+async function confirmAddPerson() {
+  const name = document.getElementById('new-person-input').value.trim();
+  if (!name) { showToast('Please enter a name', 'error'); return; }
+  if (!groupData.members) groupData.members = {};
+  if (groupData.members[name]) { showToast(name + ' already exists', 'error'); return; }
+  groupData.members[name] = { days: {}, updated: Date.now() };
+  await saveGroupToFirestore();
+  hideAddPerson();
+  renderPersonChips();
+  switchPerson(name);
+}
+window.confirmAddPerson = confirmAddPerson;
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('new-person-row').style.display !== 'none') confirmAddPerson();
+});
+
+async function switchPerson(name) {
+  // Auto-save current person before switching
+  if (currentPerson && Object.keys(selectedDays).length > 0) {
+    if (!groupData.members) groupData.members = {};
+    groupData.members[currentPerson] = { days: JSON.parse(JSON.stringify(selectedDays)), updated: Date.now() };
+    await saveGroupToFirestore();
+  }
+  currentPerson = name;
+  const saved = (groupData.members[name] && groupData.members[name].days) || {};
+  selectedDays = JSON.parse(JSON.stringify(saved));
+  renderPersonChips();
+  updateCurrentPersonBanner();
+  document.getElementById('avail-form').style.display = '';
+  document.getElementById('no-person-prompt').style.display = 'none';
+  buildCalendar();
+}
+
+function updateCurrentPersonBanner() {
+  const banner = document.getElementById('current-person-banner');
+  if (!currentPerson) { banner.style.display = 'none'; return; }
+  const dayCount = Object.keys(selectedDays).length;
+  banner.style.display = 'flex';
+  banner.innerHTML = '<div class="cp-name">' + currentPerson + '</div><div class="cp-days">· ' + dayCount + ' day' + (dayCount!==1?'s':'') + ' selected</div>';
+}
+
+function showNoPersonPrompt() {
+  document.getElementById('avail-form').style.display = 'none';
+  document.getElementById('no-person-prompt').style.display = '';
+  document.getElementById('current-person-banner').style.display = 'none';
+}
+
+// ── Day-of-week toggles ───────────────────────────────────────────────────
+const DOW_BTN_IDS = { 5: 'toggle-fri', 6: 'toggle-sat', 0: 'toggle-sun' };
+
+function getKeysByDow(dow) {
+  const keys = [];
+  const today = new Date(); today.setHours(0,0,0,0);
+  for (let mi = 0; mi < 4; mi++) {
+    const ref = new Date(today.getFullYear(), today.getMonth() + mi, 1);
+    const yr = ref.getFullYear(), mo = ref.getMonth();
+    const dim = new Date(yr, mo + 1, 0).getDate();
+    for (let d = 1; d <= dim; d++) {
+      const date = new Date(yr, mo, d);
+      if (date < today) continue;
+      if (date.getDay() === dow) keys.push(yr + '-' + String(mo+1).padStart(2,'0') + '-' + String(d).padStart(2,'0'));
+    }
+  }
+  return keys;
+}
+
+function isDowFullySelected(dow) {
+  const keys = getKeysByDow(dow);
+  return keys.length > 0 && keys.every(k => selectedDays[k]);
+}
+
+function syncDayToggleBtns() {
+  [5, 6, 0].forEach(dow => {
+    const btn = document.getElementById(DOW_BTN_IDS[dow]);
+    if (!btn) return;
+    btn.className = 'btn-day-toggle' + (isDowFullySelected(dow) ? ' active' : '');
+  });
+}
+
+function toggleDay5(dow) {
+  const keys = getKeysByDow(dow);
+  const allOn = isDowFullySelected(dow);
+  keys.forEach(key => {
+    if (allOn) {
+      delete selectedDays[key];
+      const cell = document.querySelector('[data-key="' + key + '"]');
+      if (cell) cell.classList.remove('selected');
+    } else {
+      if (!selectedDays[key]) selectedDays[key] = [false, false, false];
+      const cell = document.querySelector('[data-key="' + key + '"]');
+      if (cell) cell.classList.add('selected');
+    }
+  });
+  syncDayToggleBtns();
+  updateCurrentPersonBanner();
+  updateSlotSection();
+}
+window.toggleDay5 = toggleDay5;
+
+// ── Calendar ──────────────────────────────────────────────────────────────
+function buildCalendar() {
+  const container = document.getElementById('calendar-container');
+  container.innerHTML = '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  for (let mi = 0; mi < 4; mi++) {
+    const ref = new Date(today.getFullYear(), today.getMonth() + mi, 1);
+    const yr = ref.getFullYear(), mo = ref.getMonth();
+    const sec = document.createElement('div'); sec.className = 'month-section';
+    const title = document.createElement('div'); title.className = 'month-title';
+    title.textContent = MONTHS[mo] + ' ' + yr; sec.appendChild(title);
+    const grid = document.createElement('div'); grid.className = 'cal-grid';
+    DAYS.forEach(d => { const h = document.createElement('div'); h.className = 'cal-header'; h.textContent = d; grid.appendChild(h); });
+    const firstDow = new Date(yr, mo, 1).getDay();
+    for (let i = 0; i < firstDow; i++) { const e = document.createElement('div'); e.className = 'cal-day empty'; grid.appendChild(e); }
+    const dim = new Date(yr, mo + 1, 0).getDate();
+    for (let d = 1; d <= dim; d++) {
+      const date = new Date(yr, mo, d);
+      const key = yr + '-' + String(mo+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      const cell = document.createElement('div');
+      const dow = date.getDay();
+      cell.className = 'cal-day' + (date < today ? ' past' : '') + (dow===0||dow===6 ? ' weekend' : '');
+      if (selectedDays[key]) cell.classList.add('selected');
+      cell.textContent = d;
+      cell.dataset.key = key;
+      if (date >= today) cell.onclick = () => toggleDay(key, cell);
+      grid.appendChild(cell);
+    }
+    sec.appendChild(grid); container.appendChild(sec);
+  }
+  syncDayToggleBtns();
+  updateSlotSection();
+}
+
+function toggleDay(key, cell) {
+  if (selectedDays[key]) { delete selectedDays[key]; cell.classList.remove('selected'); }
+  else { selectedDays[key] = [false, false, false]; cell.classList.add('selected'); }
+  syncDayToggleBtns();
+  updateCurrentPersonBanner();
+  updateSlotSection();
+}
+
+function updateSlotSection() {
+  const keys = Object.keys(selectedDays).sort();
+  const sec = document.getElementById('slot-section');
+  const det = document.getElementById('slot-details');
+  if (!keys.length) { sec.style.display = 'none'; return; }
+  sec.style.display = '';
+  det.innerHTML = '';
+  keys.forEach(key => {
+    const [y,m,d] = key.split('-');
+    const label = new Date(+y,+m-1,+d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    const row = document.createElement('div'); row.className = 'slot-day';
+    const lbl = document.createElement('div'); lbl.className = 'slot-day-label'; lbl.textContent = label;
+    const pills = document.createElement('div'); pills.className = 'time-pills';
+    row.appendChild(lbl); row.appendChild(pills); det.appendChild(row);
+    TIME_SLOTS.forEach((slot, i) => {
+      const p = document.createElement('div');
+      p.className = 'pill' + (selectedDays[key][i] ? ' active' : '');
+      p.textContent = slot;
+      p.onclick = () => { selectedDays[key][i] = !selectedDays[key][i]; p.className = 'pill' + (selectedDays[key][i] ? ' active' : ''); };
+      pills.appendChild(p);
+    });
+  });
+}
+
+// ── Save availability ─────────────────────────────────────────────────────
+async function saveAvailability() {
+  if (!currentPerson) { showToast('Please select a golfer first', 'error'); return; }
+  if (!Object.keys(selectedDays).length) { showToast('Please select at least one day', 'error'); return; }
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving...';
+  if (!groupData.members) groupData.members = {};
+  groupData.members[currentPerson] = { days: JSON.parse(JSON.stringify(selectedDays)), updated: Date.now() };
+  const ok = await saveGroupToFirestore();
+  if (ok) showToast(currentPerson + '\'s availability saved!', 'success');
+  else showToast('Could not save — check your connection', 'error');
+  renderPersonChips();
+  btn.textContent = 'Save availability'; btn.disabled = false;
+}
+window.saveAvailability = saveAvailability;
+
+// ── Members ───────────────────────────────────────────────────────────────
+function renderMembers() {
+  const container = document.getElementById('members-list');
+  if (!container) return;
+  const members = groupData.members || {};
+  const names = Object.keys(members);
+  if (!names.length) {
+    container.innerHTML = '<div class="no-results"><strong>No golfers yet</strong>Go to "My availability" and add some golfers!</div>';
+    return;
+  }
+  container.innerHTML = '';
+  names.forEach(name => {
+    const count = Object.keys(members[name].days || {}).length;
+    const ini = name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    const chip = document.createElement('div'); chip.className = 'member-chip';
+    chip.innerHTML = '<div class="avatar">' + ini + '</div><div class="mname">' + name + '</div><div class="mdays">' + count + ' day' + (count!==1?'s':'') + '</div>';
+    container.appendChild(chip);
+  });
+}
+
+// ── Results ───────────────────────────────────────────────────────────────
+function birdiewatchUrl(dateKey, golferCount) {
+  const location = (document.getElementById('location-input').value.trim() || 'Denver, CO');
+  const holes = document.getElementById('holes-input').value;
+  const distance = document.getElementById('distance-input').value;
+  const params = new URLSearchParams({ location, date: dateKey, golfers: golferCount, holes, distance });
+  return 'https://www.birdiewatch.com/search/golf-courses?' + params.toString();
+}
+window.birdiewatchUrl = birdiewatchUrl;
+window.renderResults = renderResults;
+
+function renderResults() {
+  const minP = parseInt(document.getElementById('min-slider').value);
+  const members = groupData.members || {};
+  const names = Object.keys(members).filter(n => Object.keys(members[n].days||{}).length > 0);
+  const container = document.getElementById('results-container');
+  if (!container) return;
+  if (names.length < 2) {
+    container.innerHTML = '<div class="no-results"><strong>Not enough data yet</strong>Add availability for at least 2 golfers first.</div>';
+    return;
+  }
+  const dayMap = {};
+  names.forEach(name => {
+    Object.keys(members[name].days || {}).forEach(key => {
+      if (!dayMap[key]) dayMap[key] = {};
+      dayMap[key][name] = members[name].days[key];
+    });
+  });
+  const today = new Date(); today.setHours(0,0,0,0);
+  let matches = [];
+  Object.keys(dayMap).forEach(key => {
+    const [y,m,d] = key.split('-');
+    const date = new Date(+y,+m-1,+d);
+    if (date < today) return;
+    const avail = Object.keys(dayMap[key]);
+    if (avail.length < minP) return;
+    const bestSlots = TIME_SLOTS.filter((_,i) => avail.filter(n => dayMap[key][n][i]).length >= minP);
+    matches.push({ key, date, avail, bestSlots, total: names.length });
+  });
+  matches.sort((a,b) => (b.avail.length - a.avail.length) || (a.date - b.date));
+  if (!matches.length) {
+    container.innerHTML = '<div class="no-results"><strong>No overlapping dates found</strong>Try lowering the minimum golfers or add more availability.</div>';
+    return;
+  }
+  container.innerHTML = '';
+  matches.slice(0,20).forEach((m, idx) => {
+    const label = m.date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    const pct = Math.round(m.avail.length / Math.max(m.total,1) * 100);
+    const card = document.createElement('div'); card.className = 'match-card' + (idx===0?' top':'');
+    const avatars = m.avail.map(n => '<div class="avatar">' + n.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase() + '</div>').join('');
+    const badges = m.bestSlots.map(s => '<div class="slot-badge">' + s + '</div>').join('');
+    const bwUrl = birdiewatchUrl(m.key, m.avail.length);
+    card.innerHTML =
+      (idx===0?'<div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">Best match</div>':'') +
+      '<div class="match-date">' + label + '</div>' +
+      '<div class="score-row"><div class="score-bar-bg"><div class="score-bar" style="width:' + pct + '%"></div></div><div class="score-label">' + m.avail.length + ' / ' + m.total + '</div></div>' +
+      '<div class="avatars">' + avatars + '</div>' +
+      (badges?'<div class="slot-badges" style="margin-bottom:8px;">' + badges + '</div>':'') +
+      '<a class="btn-birdiewatch" href="' + bwUrl + '" target="_blank" rel="noopener">⛳ Find tee times on Birdiewatch</a>';
+    container.appendChild(card);
+  });
+}
+
+// ── Check URL for group code on load ──────────────────────────────────────
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('group');
+  if (code) {
+    switchSetupTab('join');
+    document.getElementById('group-id-input').value = code;
+    document.getElementById('storage-note').textContent = 'Group code detected — hit "Join group" to continue';
+  }
+})();
+</script>
+</body>
+</html>
